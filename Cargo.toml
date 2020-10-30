@@ -1,0 +1,15 @@
+[package]
+name = "smbc"
+version = "0.1.0"
+authors = ["Michael Doronin <m.doronin@kryptonite.ru>"]
+edition = "2018"
+
+build = "build.rs"
+links = "smbclient"
+
+[dependencies]
+libc = "0.2"
+
+[build-dependencies]
+pkg-config = "0.3.19"
+bindgen = "0.55.1"
