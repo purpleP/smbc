@@ -24,7 +24,7 @@ fn test_read() {
                 };
                 let ctx = smbc::Context::new(&auth).unwrap();
                 let mut file =
-                    ctx.open_ro(b"smb://localhost/public/test.txt\0").unwrap();
+                    ctx.open_ro(b"smb://smbserver/public/test.txt\0").unwrap();
                 let mut buf = [0u8; 1024];
                 let n = file.read(&mut buf).unwrap();
                 assert_eq!(b"data\n", &buf[..n]);

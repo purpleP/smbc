@@ -1,0 +1,15 @@
+{
+    "name": "Banshee Dev Container",
+    "runArgs": [],
+    "dockerComposeFile": [
+        "docker-compose.yml"
+    ],
+    "service": "smbclient",
+    "workspaceFolder": "/workspace",
+    "settings": {
+        "terminal.integrated.shell.linux": null
+    },
+    "extensions": [],
+    "postCreateCommand": "uname -a",
+    "remoteUser": "vscode"
+}

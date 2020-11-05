@@ -1,0 +1,27 @@
+version: "3"
+
+services:
+  smbserver:
+    image: dperson/samba
+    volumes:
+      - ../tests/data:/mount:cached
+    environment:
+      SHARE: "public;/mount"
+      PERMISSIONS: "true"
+      SMB: "true"
+
+  smbclient:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspace:cached
+      - /workspace/target/
+      - ${HOME}/.gitconfig:${HOME}/.gitconfig
+      - ${HOME}/.git-credentials:${HOME}/.git-credentials
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    user: vscode
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
