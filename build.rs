@@ -1,5 +1,3 @@
-use pkg_config;
-
 use std::env;
 use std::path::PathBuf;
 
@@ -12,10 +10,7 @@ fn main() {
         .iter()
         .flat_map(|path| path.to_str())
         .map(|raw_path| format!("-I{}", raw_path));
-    let libs_args = smbclient_lib
-        .libs
-        .iter()
-        .map(|l| format!("-l{}", l));
+    let libs_args = smbclient_lib.libs.iter().map(|l| format!("-l{}", l));
     let bindings = bindgen::Builder::default()
         .generate_comments(false)
         .header("wrapper.h")

@@ -1,0 +1,15 @@
+version: "3"
+services:
+  smbserver:
+    image: dperson/samba
+    volumes:
+      - ./tests/data/:/mount:z
+    command: ["-p", "-u", "user;pass", "-s", "public;/mount"]
+    environment:
+  integration_tests:
+    build:
+      context: .
+      dockerfile: Dockerfile_build
+    volumes:
+      - ./tests/data:/var/test_data:ro
+

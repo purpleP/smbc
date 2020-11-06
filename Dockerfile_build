@@ -1,0 +1,7 @@
+FROM rust:latest
+
+RUN apt update && apt install -y libsmbclient-dev clang
+RUN mkdir /usr/src/app
+COPY . /usr/src/app
+WORKDIR /usr/src/app
+ENTRYPOINT ["cargo", "test", "--test", "integration_tests"]

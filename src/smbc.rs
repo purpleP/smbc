@@ -62,11 +62,7 @@ impl fmt::Display for Error {
 
 pub struct Context<'a> {
     ctx: *mut SMBCCTX,
-    auth: &'a dyn for<'b> Fn(
-        &'b [u8],
-        &'b [u8],
-    )
-        -> (Cow<'a, [u8]>, Cow<'a, [u8]>, Cow<'a, [u8]>),
+    auth: &'a dyn for<'b> Fn(&'b [u8], &'b [u8]) -> Credentials<'a>,
 }
 
 pub struct File {
@@ -74,23 +70,22 @@ pub struct File {
     file: *mut SMBCFILE,
 }
 
-const DEFAULT_AUTH: (
-    Cow<'static, [u8]>,
-    Cow<'static, [u8]>,
-    Cow<'static, [u8]>,
-) = (
-    Cow::Borrowed(b"WORKGROUP\0"),
-    Cow::Borrowed(b"guest\0"),
-    Cow::Borrowed(b"\0"),
-);
+pub struct Credentials<'a> {
+    pub raw_workgroup: Cow<'a, [u8]>,
+    pub raw_username: Cow<'a, [u8]>,
+    pub raw_password: Cow<'a, [u8]>,
+}
+
+const DEFAULT_CREDENTIALS: Credentials = Credentials {
+    raw_workgroup: Cow::Borrowed(b"WORKGROUP\0"),
+    raw_username: Cow::Borrowed(b"guest\0"),
+    raw_password: Cow::Borrowed(b"\0"),
+};
 
 impl<'a> Context<'a> {
     pub fn new<F>(auth: &'a F) -> Result<Context<'a>, Error>
     where
-        F: for<'b> Fn(
-            &'b [u8],
-            &'b [u8],
-        ) -> (Cow<'a, [u8]>, Cow<'a, [u8]>, Cow<'a, [u8]>),
+        F: for<'b> Fn(&'b [u8], &'b [u8]) -> Credentials<'a>,
     {
         unsafe {
             let ctx = smbc_new_context();
@@ -128,10 +123,7 @@ impl<'a> Context<'a> {
         pw: *mut c_char,
         _pwlen: c_int,
     ) where
-        F: for<'b> Fn(
-            &'b [u8],
-            &'b [u8],
-        ) -> (Cow<'a, [u8]>, Cow<'a, [u8]>, Cow<'a, [u8]>),
+        F: for<'b> Fn(&'b [u8], &'b [u8]) -> Credentials<'a>,
     {
         unsafe {
             let srv = CStr::from_ptr(srv).to_bytes_with_nul();
@@ -140,9 +132,12 @@ impl<'a> Context<'a> {
                 smbc_getOptionUserData(ctx) as *const c_void
             );
             let auth = std::panic::AssertUnwindSafe(auth);
-            let (raw_workgroup, raw_username, raw_password) =
-                std::panic::catch_unwind(|| auth(srv, shr))
-                    .unwrap_or(DEFAULT_AUTH);
+            let Credentials {
+                raw_workgroup,
+                raw_username,
+                raw_password,
+            } = std::panic::catch_unwind(|| auth(srv, shr))
+                .unwrap_or(DEFAULT_CREDENTIALS);
             let workgroup = CStr::from_bytes_with_nul_unchecked(&raw_workgroup);
             let username = CStr::from_bytes_with_nul_unchecked(&raw_username);
             let password = CStr::from_bytes_with_nul_unchecked(&raw_password);
