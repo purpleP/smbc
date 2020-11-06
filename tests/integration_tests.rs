@@ -4,9 +4,15 @@ use std::borrow::Cow;
 use std::ffi::CStr;
 use std::io::Read;
 use std::thread::JoinHandle;
+use std::fs::File;
 
 #[test]
 fn test_read() {
+    let mut buf = Vec::new();
+    let file = File::open("/var/test_data/test.txt")
+        .expect("Test data not found in /var/test_data/test.txt!");
+    file.read_to_end(&expected_data).unwrap();
+    let expected_data = buf;
     (0..10)
         .map(|_| {
             std::thread::spawn(|| unsafe {
@@ -25,9 +31,9 @@ fn test_read() {
                 let ctx = smbc::Context::new(&auth).unwrap();
                 let mut file =
                     ctx.open_ro(b"smb://smbserver/public/test.txt\0").unwrap();
-                let mut buf = [0u8; 1024];
-                let n = file.read(&mut buf).unwrap();
-                assert_eq!(b"data\n", &buf[..n]);
+                let mut buf = Vec::new();
+                file.read_to_end(&mut buf).unwrap();
+                assert_eq!(expected_data, buf);
             })
         })
         .try_for_each(JoinHandle::join)
